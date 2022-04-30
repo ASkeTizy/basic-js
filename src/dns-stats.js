@@ -22,8 +22,34 @@ const { NotImplementedError } = require('../extensions/index.js');
  * }
  *
  */
-function getDNSStats(/* domains */) {
-  throw new NotImplementedError('Not implemented');
+function Tree(value = 0) {
+  this.count = value
+  this.edges = {}
+  this.hasEdge = (mark) => mark in this.edges
+  this.getChild = (mark) => this.edges[mark]
+  this.addEdge = (mark) => this.edges[mark] = new Tree()
+  this.getCount = () => this.count
+  return this
+}
+
+function collect(node, pref = '') {
+  const base = pref != '' ? { [pref]: node.count } : {}
+  return Object.entries(node.edges)
+    .reduce((domains, [p, t]) => Object.assign(domains, collect(t, pref + '.' + p)), base)
+}
+
+function getDNSStats(source) {
+  const root = new Tree()
+  for (let a of source) {
+    const path = a.split('.').reverse()
+    let pointer = root
+    for (let p of path) {
+      if (pointer.hasEdge(p)) pointer = pointer.getChild(p)
+      else pointer = pointer.addEdge(p)
+      pointer.count++
+    }
+  }
+  return collect(root)
   // remove line with error and write your code here
 }
 

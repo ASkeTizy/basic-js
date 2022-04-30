@@ -20,15 +20,75 @@ const { NotImplementedError } = require('../extensions/index.js');
  * 
  */
 class VigenereCipheringMachine {
-  encrypt() {
-    throw new NotImplementedError('Not implemented');
-    // remove line with error and write your code here
+  constructor(variant = true) {
+    this.reversedVariant = !variant
+    this.aCode = 'A'.charCodeAt()
   }
-  decrypt() {
-    throw new NotImplementedError('Not implemented');
-    // remove line with error and write your code here
+
+  encrypt(msg, key) {
+
+    if (msg === undefined || key === undefined)   throw Error('Incorrect arguments!');
+    
+    msg = msg.toUpperCase()
+    key = key.toUpperCase()
+
+    let encodedBuffer = []
+    let keyPosition = 0
+
+    for (let char of msg) {
+      if (char < 'A' || char > 'Z') {
+        encodedBuffer.push(char.charCodeAt())
+        continue;
+      }
+      const msgCharCode = char.charCodeAt() - this.aCode
+      const keyCharCode = key.charCodeAt(keyPosition) - this.aCode
+      encodedBuffer.push((msgCharCode + keyCharCode) % 26 + this.aCode)
+      keyPosition = (keyPosition + 1) % key.length
+    }
+
+    if (this.reversedVariant) {
+      encodedBuffer = encodedBuffer.reverse()
+    }
+
+    return encodedBuffer.map(x => String.fromCharCode(x)).join('')
+
   }
+
+  decrypt(msg, key) {
+
+    if (msg === undefined || key === undefined) {
+      throw Error('Incorrect arguments!')
+    }
+
+    msg = msg.toUpperCase()
+    key = key.toUpperCase()
+
+    let decodedBuffer = []
+    let keyPosition = 0
+
+    for (let char of msg) {
+      if (char < 'A' || char > 'Z') {
+        decodedBuffer.push(char.charCodeAt())
+        continue
+      }
+      const msgCharCode = char.charCodeAt() - this.aCode
+      const keyCharCode = key.charCodeAt(keyPosition) - this.aCode
+      decodedBuffer.push((msgCharCode - keyCharCode + 26) % 26 + this.aCode)
+      keyPosition = (keyPosition + 1) % key.length
+    }
+
+    if (this.reversedVariant) {
+      decodedBuffer = decodedBuffer.reverse()
+    }
+
+    return decodedBuffer.map(x => String.fromCharCode(x)).join('')
+  }
+
 }
+
+
+
+const directMachine = new VigenereCipheringMachine();
 
 module.exports = {
   VigenereCipheringMachine
